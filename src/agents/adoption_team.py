@@ -4,6 +4,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, AIMessage
 from langgraph.types import Command
 from .state import AgentState
+from src.core.prompt_manager import prompt_manager
 
 llm = ChatOpenAI(model="gpt-4o-mini")
 
@@ -13,24 +14,12 @@ class AdoptionDecision(BaseModel):
     reasoning: str = Field(description="이 분류를 선택한 논리적 이유")
 
 async def adoption_team_node(state: AgentState) -> Command:
-    """
-    Adoption Supervisor: Decides if the user needs a breed recommendation or general info.
-    """
-    system_prompt = """
-    당신은 ZIPSA 서비스의 'Adoption Supervisor'입니다.
-    사용자의 요청을 분석하여, **RAG 데이터베이스의 전문가 메타데이터(specialists)**와 가장 잘 매칭되는 하위 전문가에게 안내하세요.
-
-    [RAG 전문가 매핑 기준]
-    - matchmaker: **Matchmaker** (품종 추천) 또는 **Liaison** (보호소/법률) 전문가 정보가 필요한 경우.
-    - general: 특정 전문가 정보 없이 일반적인 입양 절차나 준비물에 대한 안내.
-
-    [지침]
-    - RAG 검색이 필요하면 무조건 'matchmaker'를 선택하세요.
-    - 모호하면 'general'로 분류하되, '추천', '보호소' 키워드가 있으면 전문가에게 넘기세요.
-    """
+    system_prompt = prompt_manager.get_prompt("adoption_supervisor")
+    profile = state.get("user_profile", {})
+    context_str = f"\n[사용자 환경]\n- 주거: {profile.get('housing', '미설정')}\n- 활동량: {profile.get('activity', '미설정')}\n- 선호: {', '.join(profile.get('traits', [])) if profile.get('traits') else '미설정'}"
     
     router = llm.with_structured_output(AdoptionDecision)
-    decision = await router.ainvoke([SystemMessage(content=system_prompt)] + state["messages"])
+    decision = await router.ainvoke([SystemMessage(content=system_prompt + context_str)] + state["messages"])
     
     debug = state.get("debug_info", {})
     debug.update({
@@ -39,14 +28,14 @@ async def adoption_team_node(state: AgentState) -> Command:
     })
     
     if decision.category == "matchmaker":
-        return {"adoption_sub_specialist": "matchmaker", "debug_info": debug}
+        return Command(update={"adoption_sub_specialist": "matchmaker", "debug_info": debug}, goto="matchmaker")
     else:
         msg = "새로운 가족을 맞이하는 것은 큰 축복입니다! 입양 절차나 필수 준비물에 대해 궁금하신 점이 있다면 무엇이든 물어보세요. 혹은 집사님께 딱 맞는 고양이를 추천해 드릴 수도 있습니다."
-        return {
+        return Command(update={
             "adoption_sub_specialist": "general",
             "messages": [AIMessage(content=msg)],
             "debug_info": debug
-        }
+        }, goto="__end__")
 
 from src.retrieval.hybrid_search import HybridRetriever
 
@@ -55,10 +44,12 @@ async def matchmaker_node(state: AgentState) -> Command:
     Expert node: Matchmaker (맞춤 추천)
     Incorporates user profile into the search for better matching.
     """
+    persona = prompt_manager.get_prompt("matchmaker", field="persona")
+    
     profile = state.get("user_profile", {})
     context = f"거주환경: {profile.get('housing', '')}, 활동량: {profile.get('activity', '')}, 선호성향: {', '.join(profile.get('traits', []))}"
     
-    retriever = HybridRetriever(collection_name="breeds")
+    retriever = HybridRetriever(version="v3", collection_name="care_guides")
     last_msg = state["messages"][-1].content
     search_query = f"{last_msg} (집사 환경: {context})"
     
@@ -69,17 +60,17 @@ async def matchmaker_node(state: AgentState) -> Command:
         "specialist": "Matchmaker",
         "search_query": search_query,
         "retrieved_docs": [
-            {"title": r.get("name_ko", r.get("name", "Unknown")), "score": r.get("score", 0)} 
+            {"title": r.get("name_ko", r.get("name", r.get("title_refined", "Unknown"))), "score": r.get("final_score", 0)} 
             for r in results
         ]
     }
     
     if results:
         top_breed = results[0]
-        name_ko = top_breed.get("name_ko", top_breed.get("name", "고양이"))
-        summary = top_breed.get("summary_ko", "상세 정보가 없습니다.")
+        name_ko = top_breed.get("name_ko", top_breed.get("name", top_breed.get("title_refined", "고양이")))
+        summary = top_breed.get("summary_ko", top_breed.get("text", top_breed.get("summary", "상세 정보가 없습니다.")))
         
-        recommendation_msg = f"🧩 **[인사담당 비서]** 집사님의 라이프스타일을 분석한 결과, **{name_ko}** 주인님이 가장 잘 어울리실 것 같습니다! \n\n🎩: `{summary}`"
+        recommendation_msg = f"🧩 **[인사담당 비서]** 집사님의 라이프스타일을 분석한 결과, **{name_ko}** 주인님이 가장 잘 어울리실 것 같습니다! \n\n🎩: `{summary[:500]}...`"
         shelter_msg = f"\n\n🔭 **[대외협력 비서]** 현재 해당 {name_ko} 주인님과 인연을 맺을 수 있는 인근 보호소 정보를 조회 중입니다. 조만간 기쁜 소식을 들려드릴게요!"
         
         return Command(

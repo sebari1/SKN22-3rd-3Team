@@ -6,7 +6,7 @@ from utils import get_zipsa_response
 def show_chat():
     st.markdown("""
         <div class='animate-fade'>
-            <h1 style='font-size: 2.5rem;'>🎩 AI 수석 집사 상담소 (v2.2)</h1>
+            <h1 style='font-size: 2.5rem;'>🎩 AI 수석 집사 상담소 (v3.0)</h1>
             <p style='color: var(--text-secondary);'>투명한 AI 상담: <b>전문가 팀</b>의 분석 근거를 확인할 수 있습니다.</p>
         </div>
     """, unsafe_allow_html=True)
@@ -14,7 +14,7 @@ def show_chat():
     # Sidebar: System Status
     with st.sidebar:
         st.markdown("### 🖥️ 시스템 상태")
-        st.success("데이터베이스 연결됨 (v2 Policy)")
+        st.success("데이터베이스 연결됨 (v3 Policy)")
         st.info("검색 모드: Hybrid (Vector + Keyword)")
         
         with st.expander("🩺 협업 전문가 가이드", expanded=False):

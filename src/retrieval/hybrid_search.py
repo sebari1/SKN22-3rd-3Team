@@ -7,7 +7,12 @@ from src.utils.text import tokenize_korean
 class HybridRetriever:
     def __init__(self, version="v2", collection_name=None):
         self.policy = ZipsaConfig.get_policy(version)
-        self.db = MongoDBManager.get_v1_db() if version == "v1" else MongoDBManager.get_v2_db()
+        if version == "v1":
+            self.db = MongoDBManager.get_v1_db()
+        elif version == "v3":
+            self.db = MongoDBManager.get_v3_db()
+        else:
+            self.db = MongoDBManager.get_v2_db()
         
         # Use collection from policy if not provided
         self.collection_name = collection_name or self.policy.collection_name
@@ -19,6 +24,7 @@ class HybridRetriever:
         """
         Performs Hybrid Search using RRF (Reciprocal Rank Fusion) with optional Specialist filtering.
         """
+        print(f"🔍 [RETRIEVER]: Searching for '{query}' (Specialist: {specialist})...")
         # 1. Vector Search with Pre-filter
         query_vector = await self.embedder.embed_query(query)
         
@@ -103,6 +109,7 @@ class HybridRetriever:
                 merged.append(doc)
                 seen.add(doc_id)
         
+        print(f"✅ [RETRIEVER]: Found {len(merged)} results.")
         return merged[:limit]
 
 # Example Usage

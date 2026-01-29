@@ -17,6 +17,7 @@ class VersionPolicy:
     has_specialists: bool = False
     categories: List[str] = None
     specialists: List[str] = None
+    user_dict_path: str = None
 
 # V1 Legacy Policy
 V1_POLICY = VersionPolicy(
@@ -48,10 +49,30 @@ V2_POLICY = VersionPolicy(
     ]
 )
 
+# V3 Clean Policy
+V3_POLICY = VersionPolicy(
+    version="v3",
+    db_name="cat_library",
+    processed_data_path="data/v3/bemypet_catlab_v3.json",
+    breed_data_path="data/v2/cat_breeds_integrated.json",
+    is_multi_label=True,
+    has_specialists=True,
+    user_dict_path="data/v3/domain_dictionary.txt",
+    categories=[
+        "Health (건강/질병)", "Nutrition (영양/식단)", "Behavior (행동/심리)",
+        "Care (양육/관리)", "Living (생활/환경)", "Product (제품/용품)",
+        "Legal/Social (법률/사회)", "Farewell (이별/상실)", "General Info (상식/정보)"
+    ],
+    specialists=[
+        "Matchmaker", "Liaison", "Peacekeeper", "Physician"
+    ]
+)
+
 class ZipsaConfig:
     POLICIES = {
         "v1": V1_POLICY,
-        "v2": V2_POLICY
+        "v2": V2_POLICY,
+        "v3": V3_POLICY
     }
 
     @classmethod

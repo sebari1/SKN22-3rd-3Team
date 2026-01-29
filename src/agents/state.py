@@ -15,10 +15,12 @@ class AgentState(TypedDict):
     # Adoption Team State
     selected_breed: Optional[str]
     shelter_info: Optional[List[Dict[str, Any]]]
+    adoption_sub_specialist: Optional[str]
     
     # Care Team State
     is_emergency: bool
     care_category: Optional[str] # 'health', 'behavior', 'general'
+    care_sub_specialist: Optional[str]
     
     # Final response control
     final_output: Optional[str]

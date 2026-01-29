@@ -26,13 +26,15 @@ class MongoDBManager:
 
     @staticmethod
     def get_v1_db():
+        from src.core.config import ZipsaConfig
         client = MongoDBManager.get_v1_client()
-        return client["catfit"]
+        return client[ZipsaConfig.get_policy("v1").db_name]
 
     @staticmethod
     def get_v2_db():
+        from src.core.config import ZipsaConfig
         client = MongoDBManager.get_v2_client()
-        return client["catfit_v2"]
+        return client[ZipsaConfig.get_policy("v2").db_name]
 
     @staticmethod
     def get_v1_index_config():
@@ -58,3 +60,24 @@ class MongoDBManager:
                 ]
             }
         }
+
+    @staticmethod
+    def get_v3_client():
+        uri = os.getenv("MONGO_V3_URI")
+        if not uri:
+            # Fallback to V2 URI if V3 is not explicitly set (assuming same cluster)
+            uri = os.getenv("MONGO_V2_URI")
+            if not uri:
+                 raise ValueError("MONGO_V3_URI or MONGO_V2_URI not found in .env")
+        return AsyncIOMotorClient(uri)
+
+    @staticmethod
+    def get_v3_db():
+        from src.core.config import ZipsaConfig
+        client = MongoDBManager.get_v3_client()
+        return client[ZipsaConfig.get_policy("v3").db_name]
+
+    @staticmethod
+    def get_v3_index_config():
+        # Same as V2 for now
+        return MongoDBManager.get_v2_index_config()
