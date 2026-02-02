@@ -80,3 +80,11 @@ class ZipsaConfig:
         if version not in cls.POLICIES:
             raise ValueError(f"알 수 없는 버전입니다: {version}")
         return cls.POLICIES[version]
+
+class LLMConfig:
+    # 기본 분류/라우팅용 (속도/비용 최적화)
+    ROUTER_MODEL = "gpt-4.1-nano"
+    
+    # 요약/추출/일반대화용 (단순 작업)
+    BASIC_MODEL = "gpt-4o-mini"
+

@@ -63,6 +63,9 @@ Head Butler가 유일한 Exit Point이며, 전문가 노드는 구조화 JSON(`s
 본 프로젝트는 **LangGraph 기반 4-Node Agent System** 패턴을 채택했습니다.
 
 - **Orchestration**: `LangGraph`를 이용한 상태 관리(Stateful) 및 에이전트 라우팅. Head Butler가 유일한 Exit Point.
+- **Dual-Model Strategy (Cost Optimization)**:
+  - **Router (`gpt-4.1-nano`)**: 의도 분류 및 구조화된 판단(JSON) 전용. 초경량/고비용 효율.
+  - **Basic (`gpt-4o-mini`)**: 텍스트 요약(RAG Context Distillation) 및 최종 응답 생성.
 - **Knowledge Base (RAG)**:
     - **Vector Store**: MongoDB Atlas Vector Search (`cat_library`).
     - **Retrieval**: Hybrid Search (Vector + Keyword/BM25 + RRF Re-ranking + Dynamic Metadata Filtering).

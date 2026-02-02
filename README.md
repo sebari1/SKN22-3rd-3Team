@@ -7,9 +7,13 @@
 # 의존성 설치
 pip install -r requirements.txt
 
+
 # 환경 변수 설정 (.env 파일 생성 및 API 키 입력)
 # OPENAI_API_KEY, MONGO_V3_URI, THECATAPI_API_KEY, OPENAPI_API_KEY 필수
 ```
+
+> [!TIP]
+> **LLM 모델 변경 방법**: `src/core/config.py`의 `LLMConfig` 클래스에서 `ROUTER_MODEL`(분류용)과 `BASIC_MODEL`(생성용)을 변경할 수 있습니다. 기본값은 `gpt-4.1-nano` / `gpt-4o-mini` 입니다.
 
 ## 2. 데이터 파이프라인 가동 (Data Pipeline V3)
 원천 데이터 수집부터 검색 엔진 적재까지의 전체 공정입니다.
@@ -61,7 +65,14 @@ User → Head Butler (라우터) → Matchmaker | Care Team | Liaison → Head B
 ## 5. 실험 및 벤치마크 ([Notebooks](./src/notebooks))
 `src/notebooks/` 디렉토리의 Jupyter Notebook을 통해 각 모듈의 개별 실험 및 성능 측정이 가능합니다.
 
-- **[`tokenizer_experiment.ipynb`](./src/notebooks/tokenizer_experiment.ipynb)**: Kiwi 형태소 분석기 및 도메인 사전 토큰화 실험.
-- **[`retriever_experiment.ipynb`](./src/notebooks/retriever_experiment.ipynb)**: 하이브리드 검색(RRF) 성능 벤치마킹 및 파라미터 튜닝.
-- **[`agent_prompt_experiment.ipynb`](./src/notebooks/agent_prompt_experiment.ipynb)**: 각 전문가 에이전트별 프롬프트 최적화 및 페르소나 테스트.
-- **[`debug_langgraph.ipynb`](./src/notebooks/debug_langgraph.ipynb)**: LangGraph 전이 로직 및 상태 관리 디버깅.
+- **Retrieval Evaluation**:
+  - **[`analysis_retriever_comparison.ipynb`](./src/notebooks/analysis_retriever_comparison.ipynb)**: BM25/Vector/Hybrid 모델 성능 비교 및 시각화.
+  - **[`analysis_bm25_metrics.ipynb`](./src/notebooks/analysis_bm25_metrics.ipynb)**: Keyword Search (BM25) 단독 성능 상세 분석.
+  - **[`analysis_vector_metrics.ipynb`](./src/notebooks/analysis_vector_metrics.ipynb)**: Vector Search 단독 성능 상세 분석.
+  - **[`analysis_hybrid_metrics.ipynb`](./src/notebooks/analysis_hybrid_metrics.ipynb)**: Hybrid Search 성능 상세 분석.
+- **Advanced Evaluation**:
+  - **[`analysis_llm_judge.ipynb`](./src/notebooks/analysis_llm_judge.ipynb)**: LLM(Judge)을 활용한 검색 품질 정성 평가 (Context Distillation 적용).
+- **Core Components**:
+  - **[`tokenizer_experiment.ipynb`](./src/notebooks/tokenizer_experiment.ipynb)**: Kiwi 형태소 분석기 및 도메인 사전 토큰화 실험.
+  - **[`agent_prompt_experiment.ipynb`](./src/notebooks/agent_prompt_experiment.ipynb)**: 각 전문가 에이전트별 프롬프트 최적화 및 페르소나 테스트.
+  - **[`debug_langgraph.ipynb`](./src/notebooks/debug_langgraph.ipynb)**: LangGraph 전이 로직 및 상태 관리 디버깅.

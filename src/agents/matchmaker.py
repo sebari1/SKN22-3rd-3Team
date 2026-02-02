@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
-from langchain_openai import ChatOpenAI
+from langchain.chat_models import init_chat_model
+from src.core.config import LLMConfig
 from langchain_core.messages import SystemMessage
 from langgraph.types import Command
 from .state import AgentState
@@ -9,7 +10,8 @@ from src.retrieval.hybrid_search import HybridRetriever
 from src.core.models.user_profile import UserProfile
 from src.core.models.matchmaker import BreedSelection, SearchIntent
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+llm_router = init_chat_model(LLMConfig.ROUTER_MODEL, model_provider="openai", temperature=0)
+llm_basic = init_chat_model(LLMConfig.BASIC_MODEL, model_provider="openai", temperature=0)
 
 async def matchmaker_node(state: AgentState) -> Command:
     """
@@ -31,7 +33,7 @@ async def matchmaker_node(state: AgentState) -> Command:
     persona = prompt_manager.get_prompt("matchmaker", field="persona")
 
     # 1. 검색 의도 분류 (Intent Classification)
-    intent_classifier = llm.with_structured_output(SearchIntent)
+    intent_classifier = llm_router.with_structured_output(SearchIntent)
     intent = await intent_classifier.ainvoke([
         SystemMessage(content=(
             "당신은 고양이 전문가입니다. 사용자의 질문을 분석하여 검색 의도를 분류하세요.\n"
@@ -86,7 +88,7 @@ async def matchmaker_node(state: AgentState) -> Command:
         selection_prompt += f"   - 특징: {', '.join(r.get('personality_traits', []))}\n"
         selection_prompt += f"   - 통계: {r.get('stats', {})}\n\n"
 
-    selector = llm.with_structured_output(BreedSelection)
+    selector = llm_router.with_structured_output(BreedSelection)
     selection = await selector.ainvoke(
         [SystemMessage(content=selection_prompt)],
         config={"tags": ["router_classification"]}
@@ -123,7 +125,7 @@ async def matchmaker_node(state: AgentState) -> Command:
             f"[{r.get('name_ko', '')} ({r.get('name_en', '')})]\n{r.get('text', '')[:1500]}"
             for r in top_results
         ])
-        distill_msg = await llm.ainvoke([
+        distill_msg = await llm_basic.ainvoke([
             SystemMessage(content=(
                 "아래 추천 품종 정보에서 사용자에게 설명할 핵심 특징만 간결하게 추출하세요.\n"
                 "- 품종별 2~3줄, 성격/생활환경 적합성/주의사항 위주\n"

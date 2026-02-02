@@ -33,7 +33,7 @@ V1, V2, V3 각 파이프라인 세대별로 독립적인 모듈 구조를 갖습
 프로젝트 전반에 걸쳐 사용되는 중앙 집중화된 리소스를 관리합니다. **[상세 문서 보기](./core/README.md)**
 
 #### 4.1. Configuration & Settings
-- **`config.py`**: 정책 기반 환경 설정(`ZipsaConfig`) 및 DB/모델 관리. V1/V2/V3 버전별 경로 및 컬렉션 관리.
+- **`config.py`**: 정책 기반 환경 설정(`ZipsaConfig`) 및 DB/모델 관리. `LLMConfig`를 포함하여 **Dual-Model Strategy**(`Nano`+`Mini`)를 제어합니다.
 
 #### 4.2. Prompts (중앙 집중식 프롬프트 관리)
 - **`prompts/`**:

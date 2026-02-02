@@ -1,7 +1,8 @@
 """
 리에종: 입양 및 구조 정보 전문가
 """
-from langchain_openai import ChatOpenAI
+from langchain.chat_models import init_chat_model
+from src.core.config import LLMConfig
 from langchain_core.messages import SystemMessage, ToolMessage
 from langgraph.types import Command
 
@@ -10,8 +11,9 @@ from .tools.animal_protection import search_abandoned_animals
 from src.core.prompts.prompt_manager import prompt_manager
 from src.retrieval.hybrid_search import HybridRetriever
 
-llm = ChatOpenAI(model="gpt-4o-mini")
-llm_with_tools = llm.bind_tools([search_abandoned_animals])
+llm_router = init_chat_model(LLMConfig.ROUTER_MODEL, model_provider="openai")
+llm_basic = init_chat_model(LLMConfig.BASIC_MODEL, model_provider="openai")
+llm_with_tools = llm_router.bind_tools([search_abandoned_animals])
 
 
 async def liaison_node(state: AgentState) -> Command:
@@ -75,7 +77,7 @@ async def liaison_node(state: AgentState) -> Command:
             f"[{r.get('title_refined', '') or r.get('title', '')}]\n{r.get('text', '')[:1500]}"
             for r in results
         ])
-        distill_msg = await llm.ainvoke([
+        distill_msg = await llm_basic.ainvoke([
             SystemMessage(content=(
                 "아래 참고 문서들에서 사용자 질문에 답하는 데 필요한 핵심 정보만 간결하게 추출하세요.\n"
                 "- 불필요한 서론/반복 제거, 핵심 팩트와 수치 위주로 정리\n"
