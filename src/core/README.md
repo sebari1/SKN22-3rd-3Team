@@ -47,6 +47,14 @@ V1/V2/V3 각 버전별 데이터베이스, 컬렉션, 파일 경로를 정의합
 - `categories`: 아티클 분류 체계
 - `specialists`: 전문가 페르소나 매핑
 
+### LLMConfig
+LLM 모델 사용 전략을 중앙에서 정의합니다. 비용 최적화를 위해 **Dual-Model Strategy**를 채택했습니다.
+
+- **`ROUTER_MODEL`**: `gpt-4.1-nano` (초경량)
+  - 용도: 의도 분류, 구조화된 출력(Structured Output), 라우팅 의사결정.
+- **`BASIC_MODEL`**: `gpt-4o-mini` (범용)
+  - 용도: 텍스트 요약(Distillation), 일반 대화 생성, 최종 응답 합성.
+
 ---
 
 ## 2. Data Models (`models/`)

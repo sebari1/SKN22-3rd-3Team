@@ -48,5 +48,30 @@
 - **[static/](../../static/)**:
     - TheCatAPI 등 외부 CDN 이미지를 적극 활용함에 따라 로컬 불필요 리소스 폴더 삭제.
 
+## 7. Matchmaker 검색 의도 분류 (Intent Classification)
+- **[matchmaker.py](../../src/agents/matchmaker.py)**:
+    - 사용자의 질문이 **단순 조회(LOOKUP)**인지 **추천 요청(RECOMMEND)**인지 먼저 판단하는 로직 추가.
+    - LOOKUP: 사용자 프로필(거주환경 등)을 검색어에서 배제하여 "메인쿤" 등 특정 품종 검색 시 왜곡 방지.
+    - RECOMMEND: 기존처럼 사용자 프로필을 반영하여 맞춤형 추천.
+    - SEARCH: **[CASE 3] 미등록 품종 대응** 추가. Selector가 빈 리스트를 반환하면 "해당 품종이 없습니다" 시그널을 보내, Head Butler가 "모르는 고양이다냥"으로 답변하도록 유도.
+- **[core/models/matchmaker.py](../../src/core/models/matchmaker.py)** (신규):
+    - `SearchIntent` 및 `BreedSelection` DTO를 별도 파일로 분리하여 관리.
+
+---
+## 8. 개발 환경 개선 (Jupyter Notebook)
+- **[.gitattributes](../../.gitattributes)**: `*.ipynb filter=nbstripout` 설정 추가.
+- **[requirements.txt](../../requirements.txt)**: `nbstripout` 패키지 추가.
+- **효과**: 주피터 노트북 실행 시 생성되는 Output Cell이나 메타데이터 변경을 git 추적에서 자동 제외하여 커밋 노이즈 제거.
+
+---
+## 9. Retriever 모듈화 및 테스트 환경 구축
+- **[src/retrieval/](../../src/retrieval/)**:
+    - `bm25_retriever.py`: `HybridRetriever`의 키워드 검색 로직 분리 및 단독 실행 모듈 구현.
+    - `vector_retriever.py`: 벡터 검색 로직 분리 및 단독 실행 모듈 구현.
+- **[src/notebooks/](../../src/notebooks/)** (신규/분리):
+    - `test_bm25.ipynb`: 키워드 매칭, 토크나이저, 필터링 기능 단독 테스트.
+    - `test_vector.ipynb`: 의미론적 유사도 검색 및 미등록 품종 동작 패턴 분석.
+    - `analysis_retrieval_metrics.ipynb`: Ground Truth(정답셋) 기반 Hit@k 정확도 측정 및 RRF 성능 비교 분석.
+
 ---
 **보고자: 수석 집사 ZIPSA** (2026-02-02)
