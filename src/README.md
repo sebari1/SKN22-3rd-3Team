@@ -44,7 +44,6 @@ V1, V2, V3 각 파이프라인 세대별로 독립적인 모듈 구조를 갖습
 - **`models/`**:
   - **`user_profile.py`**: 사용자 프로필 DTO (타입 안정성, Hard Constraint 추출).
   - **`cat_card.py`**: UI 카드(`CatCardRecommendation`, `CatCardStats`) 렌더링 스키마. Matchmaker 전용.
-  - **`debug.py`**: 에이전트 추적(`AgentTrace`) 및 디버그 레벨 정의.
 
 #### 4.4. Tokenizer (도메인 특화 형태소 분석)
 - **`tokenizer/`**:

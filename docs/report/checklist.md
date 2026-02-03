@@ -1,146 +1,64 @@
-# 📋 프로젝트 진행 체크리스트 (Self-Check & Feedback)
+# 📋 프로젝트 진행 체크리스트 (Detailed Status Table)
 
-본 문서는 `SKN22-3rd-3Team` 프로젝트의 개발 단계별 점검 사항을 정리한 리스트입니다. 각 항목에 대해 팀 내부적으로 묻고 답하며 완성도를 점검합니다.
+본 문서는 `SKN22-3rd-3Team` 프로젝트의 개발 현황을 **냉철하고 팩트 중심**으로 점검한 결과입니다.
 
----
-
-## 1. 프로젝트 개요 및 기획 (Project Overview)
-**"우리가 만들고자 하는 서비스가 명확한가?"**
-- [ ] **서비스의 핵심 가치(Value Proposition)가 정의되었는가?**
-    - [ ] 단순 검색이 아닌 '나만의 맞춤형 집사(Butler)' 페르소나를 성공적으로 구현했는가?
-    - [ ] 사용자(초보/경력 집사)의 상황에 따른 차별화된 경험을 제공하는가?
-- [ ] **온보딩(Onboarding) 프로세스는 유의미한가?**
-    - [ ] 수집하는 사용자 데이터(거주환경, 활동량, 성향 등)가 실제 추천 로직에 반영되고 있는가?
-    - [ ] 온보딩 단계에서 사용자의 이탈을 막을 만큼 매력적인 UI/UX를 제공하는가?
-- [ ] **목표 평가지표(KPI)가 설정되었는가?**
-    - [ ] 추천의 정확도(Relevance) 또는 사용자 만족도(Engagement)를 어떻게 측정할 것인가?
-    - [ ] LangSmith 트레이스를 통한 라우팅 정확도 90% 달성 등의 정량적 목표가 있는가?
-
-## 2. 프로젝트 구조 및 아키텍처 (Structure & Architecture)
-**"확장 가능하고 유지보수하기 쉬운 구조인가?"**
-- [ ] **패키지 구조(Package Structure)가 논리적인가?**
-    - [ ] `src/core`, `src/agents`, `src/retrieval`, `src/ui` 등으로 역할과 책임이 명확히 분리되었는가?
-    - [ ] 순환 참조(Circular Dependency) 문제는 해결되었는가?
-- [ ] **리팩토링(Refactoring) 가이드라인을 준수했는가?**
-    - [ ] 하드코딩된 설정값들이 환경변수(`.env`)나 설정 파일(`config.py`)로 관리되고 있는가?
-    - [ ] 중복된 로직(예: DB 연결)이 유틸리티 함수나 싱글톤으로 통합되었는가?
-- [ ] **테스트 전략(Testing Strategy)이 수립되었는가?**
-    - [ ] 단위 테스트(Unit Test): 각 노드(`head_butler`, `matchmaker`)가 독립적으로 동작하는지 검증했는가?
-    - [ ] 통합 테스트(Integration Test): 전체 그래프(`graph.py`)의 흐름이 끊김 없이 연결되는가?
-
-## 3. 데이터 수집 및 전처리 (Data Pipeline)
-**"AI가 학습하고 참조할 데이터는 고품질인가?"**
-- [ ] **데이터 소스(Data Source)의 신뢰성을 확보했는가?**
-    - [x] 품종 데이터: TheCatAPI + Wikipedia (67개 품종 상세)
-    - [x] 케어 가이드: BemyPet Catlab (1,153개 아티클)
-    - [x] 유기묘 정보: 국가동물보호정보시스템 (OpenAPI)
-    - [ ] 데이터 수집 시 저작권 이슈나 API 사용 제한(Rate Limit)을 고려했는가?
-- [ ] **데이터 전처리(Preprocessing)는 효과적인가?**
-    - [x] v1: 아티클 단일 카테고리 분류 (단순 매핑)
-    - [x] v2: 아티클 다중 라벨링(Multi-labeling) 및 전문가 페르소나(Specialist) 매핑
-    - [ ] 한국어 텍스트의 특성(단어 사전, 불용어 처리, Lemmatization, 형태소 분석 등)을 고려하여 토큰화(`tokenize_korean`)를 수행했는가?
-    - [ ] 중복 데이터 제거 및 결측치(Null) 처리가 완벽하게 수행되었는가?
-- [ ] **데이터 검증(Validation) 절차는 있는가?**
-    - [ ] `pydantic` 모델을 사용하여 데이터 스키마(Schema)를 엄격하게 검증했는가?
-    - [ ] 전처리 후 데이터의 품질(길이, 포맷 등)을 자동 검사하는 스크립트가 있는가?
-
-## 4. 임베딩 및 검색 전략 (Embedding & Retrieval)
-**"사용자가 원하는 정보를 정확하게 찾아내는가?"**
-- [ ] **임베딩 모델(Embedding Model) 선정 근거가 명확한가?**
-    - [ ] `text-embedding-3-small` 등을 선택한 이유(성능 vs 비용)가 타당한가?
-    - [ ] 다국어(한국어) 처리 성능을 고려했는가?
-- [ ] **하이브리드 검색(Hybrid Search) 알고리즘은 최적화되었는가?**
-    - [ ] 벡터 검색(Vector Search)과 키워드 검색(Keyword Search/BM25)의 가중치는 적절한가?
-    - [ ] **RRF(Reciprocal Rank Fusion)** 방식을 도입하여 두 검색 결과의 순위를 공정하게 재산정했는가?
-    - [ ] 필터링(`specialist` 태그)이 검색 전에 적용(Pre-filtering)되어 정확도를 높이고 있는가?
-    - [ ] Hit@3, MRR 측정이 수행되었는가?
-- [ ] **검색 파라미터 튜닝이 되었는가?**
-    - [ ] `limit`(k값)을 3으로 설정한 근거는 무엇인가? (Context Window 효율성 vs 정보의 다양성)
-
-## 5. 데이터베이스 설계 (Database Design)
-**"데이터를 효율적으로 저장하고 조회할 수 있는가?"**
-- [ ] **스키마 설계(Schema Design)는 유연한가?**
-    - [ ] 문서형 DB(MongoDB)의 장점을 살려 비정형 데이터(메타데이터 확장)를 유연하게 수용하는가?
-    - [ ] 컬렉션 분리(`breeds`, `care_guides`) 전략은 적절했는가?
-- [ ] **인덱싱(Indexing) 전략은 수립되었는가?**
-    - [ ] Atlas Search 인덱스(`default`, `vector_index`) 매핑 정의가 코드와 일치하는가?
-    - [ ] **Nori 형태소 분석기**를 적용하여 한국어 검색 성능을 확보했는가?
-- [ ] **보안 및 연결 관리(Security & Connectivity)**
-    - [ ] DB 접속 정보가 코드에 노출되지 않고 안전하게 관리되는가?
-    - [ ] Connection Pooling을 통해 잦은 요청에도 DB 부하를 최소화했는가?
-
-## 6. UI/UX 및 프론트엔드 (Streamlit Interface)
-**"사용자가 직관적이고 쾌적하게 사용할 수 있는가?"**
-- [ ] **디자인 시스템(Design System)을 적용했는가?**
-    - [ ] Glassmorphism(유리 질감) 테마가 일관되게 적용되었는가? (`style.css`)
-    - [ ] 불필요한 레이아웃 버그(예: Empty Box Artifact)를 모두 해결했는가?
-- [ ] **사용자 경험(User Experience) 흐름은 자연스러운가?**
-    - [ ] 로딩 화면(Splash Screen)을 통해 초기 진입 시 지루함을 덜었는가?
-    - [ ] 챗봇 응답 시 '생각 중(Thinking...)' 상태를 시각적으로 잘 보여주는가?
-- [ ] **투명성(Transparency)을 제공하는가?**
-    - [ ] AI가 왜 그런 답변을 했는지 **'Expert Reasoning (DEBUG)'** 아코디언을 통해 사용자에게 근거를 제시하는가?
-- [ ] **세션 관리(Session Management)는 견고한가?**
-    - [ ] 새로고침이나 리셋 시 `thread_id`(UUID)가 갱신되어, 대화 맥락이 꼬이지 않도록 처리했는가?
-
-## 7. 챗봇 에이전트 설계 (Agentic System)
-**"AI가 단순 답변 기계가 아닌 '에이전트'로서 행동하는가?"**
-- [ ] **LangGraph 아키텍처 설계가 적절한가?**
-    - [ ] **Supervisor(Head Butler) -> Expert Team -> Worker** 로 이어지는 계층 구조가 명확한가?
-    - [ ] 그래프 토폴로지(Topology)가 끊김 없이 연결(`__end__`까지)되어 있는가? (Mermaid 시각화 검증 완료?)
-- [ ] **라우팅(Routing) 로직은 지능적인가?**
-    - [ ] 단순 키워드 매칭이 아닌, **Few-Shot Prompting**을 통해 문맥을 이해하고 분류하는가?
-    - [ ] 명시적 조건부 엣지(`conditional_edges`)를 사용하여 라우팅 실패를 방지했는가?
-- [ ] **전문가(Experts) 페르소나는 뚜렷한가?**
-    - [ ] `Matchmaker`, `Physician`, `Peacekeeper`가 각자의 전문 영역 데이터만 참조하도록 격리(Search Filter)되었는가?
-- [ ] **상태 관리(State Management)는 완벽한가?**
-    - [ ] `AgentState` 객체가 대화 흐름 전반에서 데이터를 손실 없이 전달하는가 (`user_profile`, `router_decision`)?
-
-## 8. 배포 및 운영 (Deployment & Ops)
-**"내 로컬 환경뿐만 아니라 어디서든 실행 가능한가?"**
-- [ ] **환경 설정(Configuration)의 이식성**
-    - [ ] `.gitignore`가 올바르게 설정되어 민감 정보 유출을 막고 있는가?
-    - [ ] `requirements.txt`에 필요한 모든 의존성이 최신 버전으로 명시되어 있는가?
-- [ ] **문서화(Documentation) 상태**
-    - [ ] `README.md`만 보고도 프로젝트를 실행할 수 있는가?
-    - [ ] 아키텍처 다이어그램이나 데이터 흐름도가 최신 상태로 유지되고 있는가?
-
+**상태 범례**:
+- ✅ **완료 (Done)**: 구현 및 코드 레벨 검증 완료.
+- ⚠️ **부분 완료 (Partial)**: 구현은 되었으나 검증이 부족하거나 개선이 필요함.
+- 🛑 **미진행 (Not Started)**: 기획 단계에 있거나 구현되지 않음.
 
 ---
 
-
-## 6. UI/UX 및 프론트엔드 (Streamlit Interface)
-- [ ] **디자인 시스템(Design System)을 적용했는가?**
-    - [ ] 다크 모드 등 사용자가 사용하는 프로그램(Google Chrome, Samsung Internet 등)에 기본적으로 적용 가능한 디자인 변경 중 대중성 높은 것이 적용됐을 때 정상적으로 출력되는가?
-    **현재 첫 화면에서 집사 특징 입력 시 글자가 잘 보이지 않아 다크모드 설정을 해야 잘 보이며, 반대로 단락 제목은 다크모드 적용 시 잘 보이지 않습니다.**
-
-## 7. 챗봇 에이전트 설계 (Agentic System
-- [ ] **라우팅(Routing) 로직은 지능적인가?**?
-    - [ ] 의도 파악 vs 키워드 매칭: 사용자의 질문에서 단순 키워드(품종명) 추출이 아닌, 질문의 **핵심 의도(입양 상담 vs 품종 추천)**를 정확히 분류하고 있는가?
-    - [ ] 현재 이슈: "품종 입양 시 주의점(케어 상담)" 질문이 "품종명(키워드)"에만 반응하여 Matchmaker(인사담당 팀)로 잘못 라우팅되어, 부적절한 답변이 출력되는 현상이 발생하는가?
-- [ ] **전문가(Experts) 페르소나는 뚜렷한가?**
-    - [ ] 특정 키워드에 편향되지 않고, 전문가별로 정의된 Task 범위 내에서만 답변을 생성하도록 프롬프트가 정교하게 설계되었는가?
-
-## 9. 비용 및 성능 최적화 (Efficiency)
-**"서비스 운영 비용과 응답 속도가 최적화되었는가?"**
-- [ ] **토큰 절약 전략**
-    - [ ] 대화가 길어질 경우 이전 대화 맥락을 모두 보내는 대신, 요약(Summary)하거나 윈도우 방식으로 자르는 로직이 적용되었는가? (trim_messages 또는 ConversationSummaryBufferMemory)
-- [ ] **비동기 처리(Async)**
-    - [ ] Streamlit에서 에이전트의 답변을 기다리는 동안 인터페이스가 멈추지 않도록 asyncio나 스트리밍(Streaming) 방식의 출력을 구현했는가?
-- [ ] **캐싱(Caching)**
-    - [ ] 동일하거나 유사한 질문에 대해 임베딩 검색 결과를 캐싱하여 API 비용을 절감하고 응답 속도를 높였는가?
-
-## 10. **에이전트 루프 및 예외 처리 (Robustness)**
-**"에이전트가 무한 루프에 빠지거나 길을 잃지 않는가?"**
-- [ ] **무한 루프 방지(Max Iterations)**
-    - [ ] Head Butler가 판단을 내리지 못하고 동일한 노드를 반복해서 호출할 경우를 대비한 탈출 조건(예: Recursion Limit 설정)이 있는가?
-- [ ] **Fallback 라우팅**
-    - [ ] Head Butler가 사용자의 질문을 어떤 전문가에게도 할당하지 못했을 때(분류 실패), "죄송하지만 잘 이해하지 못했습니다"와 같은 기본 응답 노드로 안전하게 연결되는가?
-- [ ] **할루시네이션(Hallucination) 방지**
-    - [ ]검색된 컨텍스트에 답변이 없을 경우 "모른다"고 답변하도록 프롬프트에 명시되어 있는가? (Groundedness 확인)
-
-## 11. 확장성 및 윤리 (Scalability & Ethics)
-**"더 많은 고양이와 더 많은 집사를 수용할 준비가 되었는가?"**
-- [ ] **멀티모달 확장성**
-    - [ ] 향후 고양이 사진을 업로드하여 건강 상태를 체크하는 등의 추가 기능을 위한 이미지 입력(Vision) 확장 구조를 고려했는가?
-- [ ] **안전 가드레일(Guardrails)**
-    - [ ] 고양이에게 치명적인 음식이나 잘못된 의학 정보를 제공하지 않도록, 특정 키워드 대해 강력한 경고 문구를 출력하는 로직이 있는가?
+| 구분 (Category) | 점검 항목 (Check Item) | 세부 검증 내용 (Validation Criteria) | 상태 |
+|:--- |:--- |:--- |:---:|
+| **1. 기획 (Overview)** | **핵심 가치 (Value Proposition)** | 단순 검색이 아닌 '나만의 맞춤형 집사(Butler)' 페르소나 구현 | ✅ |
+| | | 사용자(초보/경력 집사)의 상황에 따른 차별화된 경험 제공 | ⚠️ |
+| | **온보딩 (Onboarding)** | 거주환경/활동량/성향 데이터 수집 및 추천 로직 반영 | ✅ |
+| | | 사용자 이탈을 막을 만큼 매력적인 UI/UX 제공 | 🛑 |
+| | **평가지표 (KPI)** | 추천 정확도(Relevance) 또는 사용자 만족도(Engagement) 기준 수립 | 🛑 |
+| | | **LangSmith 트레이스를 통한 라우팅 정확도 90% 달성 등 자동화 측정** | 🛑 |
+| **2. 아키텍처 (Structure)** | **패키지 구조 (Package)** | `core`, `agents`, `retrieval`, `ui` 등 역할과 책임 분리 | ✅ |
+| | | 순환 참조(Circular Dependency) 문제 해결 | 🛑 |
+| | **리팩토링 (Refactoring)** | 하드코딩된 설정값의 환경변수(`.env`) 및 `config.py` 중앙화 | ✅ |
+| | | 중복 로직(DB 연결 등)을 유틸리티/싱글톤으로 통합 | ✅ |
+| | **테스트 전략 (Testing)** | 단위 테스트: 노드별(`head_butler`, `matchmaker`) 독립 동작 검증 | ✅ |
+| | | 통합 테스트: 전체 그래프(`graph.py`) 흐름 연결 검증 (`verify_agents_e2e.py`) | ✅ |
+| **3. 데이터 (Data Pipeline)** | **데이터 소스 (Source)** | 품종 데이터 확보 (TheCatAPI + Wikipedia, 67종) | ✅ |
+| | | 케어 가이드 확보 (BemyPet Catlab, 1,153건) | ✅ |
+| | | 유기묘 정보 연동 (국가동물보호정보시스템 OpenAPI) | ✅ |
+| | **데이터 전처리 (Preprocessing)** | v1~v3 파이프라인 구축 (분류, 다중 라벨링, 페르소나 매핑) | ✅ |
+| | | **한국어 형태소 분석 (Kiwi 적용)** 및 사전(도메인, 단어, 불용어, 동의어) 구축 | ✅ |
+| | | 중복 데이터 제거 및 결측치(Null) 처리 | ✅ |
+| | **데이터 검증 (Validation)** | `pydantic` 모델 기반 데이터 스키마(Schema) 엄격 검증 | ✅ |
+| **4. 검색 (Retrieval)** | **임베딩 모델 (Embedding)** | **비용/성능을 고려한 모델 선정 근거 (`text-embedding-3-small` vs Others)** | ⚠️ |
+| | **하이브리드 검색 (Hybrid)** | 벡터(Vector) + 키워드(BM25) 검색 적용 | ✅ |
+| | | **RRF (Reciprocal Rank Fusion)** 기반 순위 재산정 | ✅ |
+| | | Specialist 태그 기반 Pre-filtering 적용 | ✅ |
+| | | Hit@3, MRR 등 검색 성능 지표 측정 | ✅ |
+| | **파라미터 튜닝** | Context Window 효율성을 위한 `limit=3` 설정 근거 확보 | ✅ |
+| **5. 데이터베이스 (DB)** | **스키마 설계 (Schema)** | MongoDB의 장점을 살린 비정형 데이터/메타데이터 수용 | ✅ |
+| | | 컬렉션 분리 전략 (`breeds` vs `care_guides`) | ✅ |
+| | **인덱싱 (Indexing)** | Atlas Search 인덱스(`default`, `vector_index`) 매핑 코드 일치 | ✅ |
+| | | **Nori 형태소 분석기 (Atlas Search Analyzer) 적용** | 🛑 |
+| | **보안 (Security)** | DB 접속 정보의 코드 분리 및 안전한 관리 (`.env`) | ✅ |
+| **6. UI/UX (Frontend)** | **디자인 시스템** | Glassmorphism(유리 질감) 테마 적용 (`style.css`) | ⚠️ |
+| | **사용자 경험 (UX)** | 로딩 화면(Splash Screen) 및 'Thinking...' 상태 시각화 | ✅ |
+| | **투명성 (Transparency)** | AI 답변의 근거(Reasoning)를 보여주는 Debug UI 제공 | ✅ |
+| | **세션 관리 (Session)** | 새로고침 시에도 대화 맥락이 유지되도록 `thread_id` 관리 | ✅ |
+| **7. 에이전트 (Agentic)** | **LangGraph 설계** | Head Butler -> Expert -> End 계층 구조 확립 | ✅ |
+| | | 그래프 토폴로지 연결 검증 (Graph Visualization) | ✅ |
+| | **라우팅 (Routing)** | Few-Shot Prompting을 통한 문맥 기반 분류 | ✅ |
+| | | 단순 키워드가 아닌 **'핵심 의도(Intent)'** 파악 정확도 개선 | ✅ |
+| | **페르소나 (Persona)** | `Matchmaker`, `Physician` 등 전문가별 역할/데이터 격리 | ✅ |
+| | **상태 관리 (State)** | `AgentState`를 통한 데이터 무손실 전달 | ✅ |
+| **8. 운영 (Deployment)** | **이식성 (Portability)** | `.gitignore` 및 `requirements.txt` 의존성 관리 | ✅ |
+| | **문서화 (Documents)** | `README.md` 만으로 실행 가능한 가이드 제공 | ✅ |
+| | | 아키텍처 다이어그램 최신화 상태 유지 | ✅ |
+| **9. 효율성 (Efficiency)** | **토큰 절약** | **Distillation(요약)** 전략으로 Head Butler 입력 비용 절감 | ✅ |
+| | **비동기 처리** | `asyncio` 기반 Non-blocking 에이전트 실행 | ✅ |
+| | **캐싱 (Caching)** | **Redis 등을 활용한 임베딩 검색 결과 캐싱** | 🛑 |
+| **10. 안정성 (Robustness)** | **루프 방지** | Recursion Limit 및 명확한 종료 조건 설정 | ✅ |
+| | **Fallback 라우팅** | 분류 실패 시 `general` 노드로 안전하게 연결 | ✅ |
+| | **할루시네이션 방지** | 프롬프트 내 "Unknown Defense" 및 9단계 방어 기제 | ✅ |
+| **11. 확장성 (Scalability)** | **멀티모달 (Vision)** | **이미지 인식(고양이 사진 분석) 기능 확장** | 🛑 |
+| | **안전 가드레일** | 독극물/학대 등 유해 정보에 대한 필터링/경고 로직 | ✅ |

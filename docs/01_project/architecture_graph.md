@@ -9,7 +9,39 @@ ZIPSA 서비스는 **4-Node Agent System**으로 설계되었습니다.
 
 아래 다이어그램은 실제 소스 코드(`src/agents/graph.py`)에서 생성된 LangGraph 구조입니다.
 
-![LangGraph Architecture](../assets/zipsa_graph_structure.png)
+```mermaid
+graph TD
+    %% 스타일 정의
+    classDef butler fill:#2C3E50,stroke:#2C3E50,color:white,rx:10,ry:10;
+    classDef specialist fill:#E67E22,stroke:#D35400,color:white,rx:5,ry:5;
+    classDef tool fill:#8E44AD,stroke:#9B59B6,color:white,rx:5,ry:5;
+    classDef terminal fill:#333,stroke:#333,color:white,circle;
+
+    %% 노드 정의
+    START((Start)) --> HB
+    HB[🎩 <b>Head Butler</b><br/>Router & Response]:::butler
+    
+    %% 분기 (라우팅)
+    HB -- "intent='matchmaker'" --> MM[🧩 <b>Matchmaker</b><br/>Breed Recommend]:::specialist
+    HB -- "intent='care'" --> CT[🏥 <b>Care Team</b><br/>Health & Behavior]:::specialist
+    HB -- "intent='liaison'" --> LA[🔭 <b>Liaison</b><br/>Adoption & Rescue]:::specialist
+    HB -- "intent='general' OR final" --> END((End)):::terminal
+
+    %% 복귀 (전문가 -> 집사)
+    MM -- "specialist_result" --> HB
+    CT -- "specialist_result" --> HB
+    
+    %% 리에종 & 도구 순환 구조
+    LA -- "needs_tool=True" --> TN[🛠️ <b>ToolNode</b><br/>Animal Protection API]:::tool
+    TN -- "tool_output" --> LA
+    LA -- "needs_tool=False<br/>(RAG Result)" --> HB
+
+    %% 범례
+    subgraph Legend
+    direction LR
+    L1(Butler):::butler --- L2(Specialist):::specialist --- L3(Tool):::tool
+    end
+```
 
 ---
 
